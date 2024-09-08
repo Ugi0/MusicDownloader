@@ -1,0 +1,7 @@
+flask
+rsa
+waitress
+pytaglib
+python-dotenv
+cryptography
+yt_dlp

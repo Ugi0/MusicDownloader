@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  redis:
+    image: musicdownloader:latest
+    secrets:
+      - public_key
+      - private_key
+      - secret_key
+    ports:
+      - 8123:8123
+    volumes:
+      - /mnt/extssd:/app/storage
+
+secrets:
+  public_key:
+    file: ./.secrets/key.pub
+  private_key:
+    file: ./.secrets/key
+  secret_key:
+    file: ./.secrets/secret
+
