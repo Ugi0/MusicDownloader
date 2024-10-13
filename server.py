@@ -1,19 +1,25 @@
 from flask import Flask, Response, stream_with_context, request, send_file, make_response
 from waitress import serve
 import yt_dlp
+import logging
 import os
 import json
 import taglib
 import shutil
-import logging
 import base64
 from dotenv import load_dotenv
 import rsa
 
-import logging
-logging.basicConfig(filename='/app/storage/out.log', level=logging.NOTSET,
-    format='%(asctime)s %(levelname)s %(name)s %(message)s')
-logger=logging.getLogger(__name__)
+logging.basicConfig()
+logger = logging.getLogger('waitress')
+logger.setLevel(logging.DEBUG)
+
+app = Flask(__name__)
+
+@app.before_request
+def log_request_info():
+    print(f'{request.method} request to {request.path}')
+    return None
 
 def load_keys():
     public_key_path = '/run/secrets/public_key'
@@ -48,22 +54,29 @@ def get_filename_rec(dst, artist, ext, num):
 
 private, public, secret = load_keys()
 
-app = Flask(__name__)
-
 @app.route('/key')
 def get_key():
     response = make_response(public, 200)
     response.mimetype = "text/plain"
     return response
 
+@app.route('/', methods=["GET"])
+def root_get():
+    return "Not allowed", 418
+
 @app.route('/', methods=["POST"])
-def main():
+def root_post():
+    if request.data == "":
+        return "Not allowed", 418
     try:
         data = rsa.decrypt(base64.b64decode(request.data), private)
     except Exception as e:
-        return "Not encoded correctly", 400
+        print(f"Not encoded correctly: {e}")
+        return "Not allowed", 400
+    print(data)
     jdata = json.loads(data)
     if jdata["secret"] != secret:
+        print("Not allowed")
         return "Not allowed", 401
     name = jdata['title']
     url = jdata['url']
@@ -78,13 +91,13 @@ def main():
         }
     #Download song
     new, filename = get_filename_func(f'/app/storage/{name}.wav', jdata['author'])
-    print(new, filename)
+    print(f'{new}, {filename}')
     if new:
         try:
             with yt_dlp.YoutubeDL(yt_opts) as ydl:
                 ydl.download(url)
         except Exception as e:
-            logger.error(e)
+            print(f"Error while downloading: {e}")
             return f"Error while downloading: {e}", 503
         with taglib.File(f'/tmp/{name}.wav', save_on_exit=True) as song:
             song.tags["ARTIST"] = jdata["author"]

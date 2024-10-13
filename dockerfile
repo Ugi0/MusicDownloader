@@ -13,12 +13,8 @@ RUN apt-get update \
 #install ssh
 #RUN apk update && apk add -y --no-cache openssh ffmpeg
 
-#Labels as key value pair
-LABEL Maintainer="roushan.me17"
-
 #to COPY the remote file at working directory in container
 COPY server.py ./
-COPY download.py ./
 COPY requirements.txt ./
 
 # Open required ports
@@ -35,4 +31,4 @@ RUN apt-get update \
 #CMD instruction should be used to run the software
 #contained by your image, along with any arguments.
 
-CMD [ "python", "-u", "./server.py"]
+CMD python -u server.py
