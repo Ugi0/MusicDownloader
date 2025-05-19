@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY server.py .
 COPY requirements.txt .
+COPY cookiefile .
 
 EXPOSE 80
 

@@ -10,9 +10,9 @@ import base64
 from dotenv import load_dotenv
 import rsa
 
-logging.basicConfig()
-logger = logging.getLogger('waitress')
-logger.setLevel(logging.DEBUG)
+#logging.basicConfig()
+#logger = logging.getLogger('waitress')
+#logger.setLevel(logging.DEBUG)
 
 app = Flask(__name__)
 
@@ -84,6 +84,7 @@ def root_post():
             'outtmpl' : f'/tmp/{name}.%(ext)s',
             'extract_audio' : True,
             'format': 'bestaudio/best',
+	    'cookiefile': 'cookiefile',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'wav',
