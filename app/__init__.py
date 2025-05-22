@@ -1,0 +1,24 @@
+from flask import Flask
+from celery import Celery
+import os
+
+celery = Celery(__name__)
+
+def make_celery(app):
+    celery.conf.broker_url = app.config["CELERY_BROKER_URL"]
+    celery.conf.result_backend = app.config["CELERY_BROKER_URL"]
+    celery.conf.update(app.config)
+    celery.Task = type('ContextTask', (celery.Task,), {
+        'run': lambda self, *args, **kwargs: app.app_context().__enter__() or self.run(*args, **kwargs)
+    })
+    return celery
+
+def create_app():
+    app = Flask(__name__)
+    app.config["CELERY_BROKER_URL"] = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+    
+    from .routes import bp
+    app.register_blueprint(bp)
+
+    make_celery(app)
+    return app

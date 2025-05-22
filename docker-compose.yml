@@ -15,6 +15,11 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
   app:
     image: musicdownloader:latest
     environment:
@@ -29,6 +34,15 @@ services:
       - /mnt/extssd:/app/storage
     depends_on:
       - db
+
+  worker:
+    build: .
+    command: celery -A app.tasks.celery worker --loglevel=info
+    depends_on:
+      - redis
+      - db
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
 
 secrets:
   public_key:

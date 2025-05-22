@@ -1,5 +1,6 @@
 flask
 rsa
+celery
 waitress
 pytaglib==2.1.0
 python-dotenv
