@@ -1,0 +1,6 @@
+.gitconfig
+.secrets/key
+.secrets/key.pub
+.secrets/secret
+.env
+cookiefile
