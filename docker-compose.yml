@@ -21,13 +21,12 @@ services:
       - "6379:6379"
 
   app:
-    image: musicdownloader:latest
+    build:
+      context: .
+      dockerfile: dockerfile
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-    secrets:
-      - public_key
-      - private_key
-      - secret_key
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     ports:
       - 80:80
     volumes:

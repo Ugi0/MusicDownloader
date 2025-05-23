@@ -1,13 +1,11 @@
-def insert_user_query(username: str, password: str) -> str:
-    return f"""
-        INSERT INTO user (username, password)
-        VALUES ({username}, {password})
-        RETURNING id;
-    """
+from sqlalchemy import text
 
-def get_hashed_password_from_db(username: str) -> str:
-    return f"""
-        SELECT password
-        FROM user
-        WHERE username = {username};
-    """
+def insert_user_query() -> text:
+    return text(
+	"INSERT INTO users (username, password_hash) VALUES (:username, :password)"
+    )
+
+def get_hashed_password_query() -> text:
+    return text(
+	"SELECT password_hash FROM users WHERE username = ':username'"
+    )

@@ -1,4 +1,4 @@
-from .. import celery
+from . import celery
 from app.downloader import download_file
 
 @celery.task

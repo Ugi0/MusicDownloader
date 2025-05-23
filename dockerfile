@@ -1,8 +1,10 @@
 FROM arm64v8/python:3.11-slim
 
 ENV PYTHONPATH "${PYTHONPATH}:/app"
-
+ENV PATH="$PATH:/home/appuser/.local/bin"
 ENV RUNTIME_DEPENDENCIES="ffmpeg"
+
+RUN useradd -ms /bin/bash appuser
 
 WORKDIR /app
 
@@ -18,8 +20,11 @@ RUN apt-get update && apt-get install -y \
 
 COPY . .
 
+RUN chown -R appuser:appuser /app
+USER appuser
+
 EXPOSE 80
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:80", "run:app"]

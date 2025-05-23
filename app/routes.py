@@ -1,4 +1,4 @@
-from flask import Blueprint, request, send_file
+from flask import Blueprint, request, send_file, current_app
 from .tasks import start_download_task
 import hmac
 import os
@@ -7,12 +7,17 @@ from sqlalchemy import text, create_engine
 from app.queries import *;
 
 app = Blueprint("main", __name__)
-secret = os.getenv("SECRET_KEY")
 
+secret = os.getenv("SECRET_KEY")
 db_url = os.getenv("DATABASE_URL", "")
+
 if not db_url:
     raise ValueError("DATABASE_URL environment variable is not set")
 engine = create_engine(db_url)
+
+@app.before_request
+def log_request():
+    current_app.logger.info(f'{request.method} request to {request.path}')
 
 @app.route('/login', methods=["POST"])
 def login():
@@ -20,7 +25,8 @@ def login():
     username = data['username']
     password = data['password']
 
-    stored_hash = get_hashed_password_from_db(username)
+    with engine.begin() as conn:
+        stored_hash = conn.execute(get_hashed_password_query(), {"username": username})
 
     if stored_hash and check_password(password, stored_hash.encode('utf-8')):
         return "Login successful", 200
@@ -40,14 +46,12 @@ def register():
 
     if not username or not password:
         return "Missing parameters", 400
-    
+
     hashed = hash_password(password)
 
-    with engine.connect() as conn:
-        conn.execute(
-            text("INSERT INTO users (username, password) VALUES (:username, :password)"),
-                {"username": username, "password": hashed}
-        )
+    with engine.begin() as conn:
+        conn.execute(insert_user_query(), {"username": username, "password": hashed})
+    return "Success", 200
 
 @app.route('/status/<id>')
 def get_status(id: str):

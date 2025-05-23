@@ -1,7 +1,11 @@
 flask
 rsa
 celery
-waitress
+bcrypt
+sqlalchemy
+psycopg2-binary
+redis
+gunicorn
 pytaglib==2.1.0
 python-dotenv
 cryptography
