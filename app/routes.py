@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from app.queries import *
 from functools import wraps
 import jwt
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 app = Blueprint("main", __name__)
 
@@ -61,7 +61,7 @@ def login():
     if row and check_password(password, row["password_hash"].encode('utf-8')):
         payload = {
             "sub": username,
-            "exp": datetime.now(timezone.utc) + datetime.timedelta(seconds=JWT_TOKEN_DURATION)
+            "exp": datetime.now(timezone.utc) + timedelta(seconds=JWT_TOKEN_DURATION)
         }
         token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
         return jsonify({"token": token}), 200
