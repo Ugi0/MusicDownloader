@@ -7,5 +7,5 @@ def insert_user_query() -> text:
 
 def get_hashed_password_query() -> text:
     return text(
-	"SELECT password_hash FROM users WHERE username = ':username'"
+	"SELECT password_hash FROM users WHERE username = :username"
     )
