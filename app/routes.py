@@ -26,9 +26,9 @@ def login():
     password = data['password']
 
     with engine.begin() as conn:
-        stored_hash = conn.execute(get_hashed_password_query(), {"username": username})
-
-    if stored_hash and check_password(password, stored_hash.encode('utf-8')):
+        result = conn.execute(get_hashed_password_query(), {"username": username})
+        row = result.mappings().fetchone()
+    if row and check_password(password, row["password_hash"].encode('utf-8')):
         return "Login successful", 200
     else:
         return "Invalid credentials", 401
