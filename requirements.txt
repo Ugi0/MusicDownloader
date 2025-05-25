@@ -5,6 +5,7 @@ bcrypt
 sqlalchemy
 psycopg2-binary
 redis
+PyJWT
 gunicorn
 pytaglib==2.1.0
 python-dotenv

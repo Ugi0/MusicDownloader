@@ -1,12 +1,19 @@
-from flask import Blueprint, request, send_file, current_app
+from flask import Blueprint, request, send_file, current_app, jsonify
 from .tasks import start_download_task
 import hmac
 import os
 import bcrypt
-from sqlalchemy import text, create_engine
-from app.queries import *;
+from sqlalchemy import create_engine
+from app.queries import *
+from functools import wraps
+import jwt
+import datetime
 
 app = Blueprint("main", __name__)
+
+JWT_SECRET = os.getenv("JWT_SECRET", os.getenv("SECRET_KEY"))
+JWT_ALGORITHM = "HS256"
+JWT_TOKEN_DURATION = 3600
 
 secret = os.getenv("SECRET_KEY")
 db_url = os.getenv("DATABASE_URL", "")
@@ -15,9 +22,32 @@ if not db_url:
     raise ValueError("DATABASE_URL environment variable is not set")
 engine = create_engine(db_url)
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", None)
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Missing or invalid token"}), 401
+
+        token = auth_header.split(" ")[1]
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            request.user = payload["sub"]
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token has expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.before_request
 def log_request():
     current_app.logger.info(f'{request.method} request to {request.path}')
+
+@app.route('/', methods=["GET"])
+def root_get():
+    return "Not allowed", 418
 
 @app.route('/login', methods=["POST"])
 def login():
@@ -26,10 +56,15 @@ def login():
     password = data['password']
 
     with engine.begin() as conn:
-        stored_hash = conn.execute(get_hashed_password_query(), {"username": username})
-
-    if stored_hash and check_password(password, stored_hash.encode('utf-8')):
-        return "Login successful", 200
+        result = conn.execute(get_hashed_password_query(), {"username": username})
+        row = result.fetchone()
+    if row and check_password(password, row["password_hash"].encode('utf-8')):
+        payload = {
+            "sub": username,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(seconds=JWT_TOKEN_DURATION)
+        }
+        token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        return jsonify({"token": token}), 200
     else:
         return "Invalid credentials", 401
 
@@ -54,6 +89,7 @@ def register():
     return "Success", 200
 
 @app.route('/status/<id>')
+@login_required
 def get_status(id: str):
     if os.path.exists(f'/app/storage/{id}'):
         return "File exists", 200
@@ -61,6 +97,7 @@ def get_status(id: str):
         return "File does not exist", 404
     
 @app.route('/delete/<id>')
+@login_required
 def delete_file(id: str):
     if os.path.exists(f'/app/storage/{id}'):
         os.remove(f'/app/storage/{id}')
@@ -69,17 +106,15 @@ def delete_file(id: str):
         return "File does not exist", 404
     
 @app.route('/download/<id>')
+@login_required
 def download_file(id: str):
     if os.path.exists(f'/app/storage/{id}'):
         return send_file(f'/app/storage/{id}', as_attachment=True)
     else:
         return "File does not exist", 404
 
-@app.route('/', methods=["GET"])
-def root_get():
-    return "Not allowed", 418
-
 @app.route('/start_download', methods=["POST"])
+@login_required
 def start_post():
     data = request.get_json()
     user_secret = data.get("secret", "")
