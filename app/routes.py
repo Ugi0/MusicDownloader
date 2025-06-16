@@ -22,7 +22,7 @@ if not db_url:
     raise ValueError("DATABASE_URL environment variable is not set")
 engine = create_engine(db_url)
 
-def login_required(f):
+def login_required(f: function) -> function:
     @wraps(f)
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get("Authorization", None)
@@ -117,19 +117,16 @@ def download_file(id: str):
 @login_required
 def start_post():
     data = request.get_json()
-    user_secret = data.get("secret", "")
-
-    if not hmac.compare_digest(user_secret, secret):
-        return "Unauthorized", 401
 
     url = data.get("url")
     title = data.get("title")
     author = data.get("author", "")
+    format = data.get("format", "mp3")
 
     if not url or not title:
         return "Missing parameters", 400
 
-    start_download_task.delay(url, title, author)
+    start_download_task.delay(url, title, author, format)
     return "Download started", 200
 
 def hash_password(plain_password: str) -> str:
