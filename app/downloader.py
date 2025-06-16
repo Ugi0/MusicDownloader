@@ -4,7 +4,7 @@ import taglib
 
 def download_file(id: str, title: str, author: str, format: str):
     yt_opts = {
-            'outtmpl' : f'/tmp/{id}',
+            'outtmpl' : f'/tmp/{id}.{format}',
             'extract_audio' : True,
             'format': 'bestaudio/best',
             'cookiefile': 'cookiefile',
@@ -21,7 +21,7 @@ def download_file(id: str, title: str, author: str, format: str):
             song.tags["ARTIST"] = author
             song.tags["TITLE"] = title
             song.tags["FORMAT"] = format
-            shutil.copy2(f'/tmp/{id}', f'/app/storage/{id}')
+        shutil.copy2(f'/tmp/{id}.{format}', f'/app/storage/{id}')
     except Exception as e:
         print(f"Error while downloading: {e}")
         return f"Error while downloading: {e}", 503
