@@ -25,8 +25,9 @@ services:
       context: .
       dockerfile: dockerfile
     environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
     ports:
       - 80:80
     volumes:
@@ -41,16 +42,7 @@ services:
       - redis
       - db
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-
-secrets:
-  public_key:
-    file: ./.secrets/key.pub
-  private_key:
-    file: ./.secrets/key
-  secret_key:
-    file: ./.secrets/secret
-
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
 
 volumes:
   postgres_data:

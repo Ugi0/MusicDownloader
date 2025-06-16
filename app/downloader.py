@@ -11,7 +11,7 @@ def download_file(id: str, title: str, author: str, format: str):
             final_path = d['filename']
     
     yt_opts = {
-            'outtmpl' : f'/tmp/{id}.{format}',
+            'outtmpl' : f'/tmp/{id}',
             'extract_audio' : True,
             'format': 'bestaudio/best',
             'cookiefile': 'cookiefile',
