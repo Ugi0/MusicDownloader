@@ -17,7 +17,7 @@ def download_file(id: str, title: str, author: str, format: str):
     try:
         with yt_dlp.YoutubeDL(yt_opts) as ydl:
             ydl.download(id)
-        with taglib.File(f'/tmp/{id}', save_on_exit=True) as song:
+        with taglib.File(f'/tmp/{id}.{format}', save_on_exit=True) as song:
             song.tags["ARTIST"] = author
             song.tags["TITLE"] = title
             song.tags["FORMAT"] = format
