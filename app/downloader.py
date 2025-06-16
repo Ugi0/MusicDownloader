@@ -24,14 +24,15 @@ def download_file(id: str, title: str, author: str, format: str):
     #Download song
     try:
         with yt_dlp.YoutubeDL(yt_opts) as ydl:
-            ydl.download(id)
-            if final_path is None:
-                raise Exception("Download failed, no final path found.")
-            with taglib.File(final_path, save_on_exit=True) as song:
-                song.tags["ARTIST"] = author
-                song.tags["TITLE"] = title
-                song.tags["FORMAT"] = format
-            shutil.copy2(final_path, f'/app/storage/{id}')
+            ydl.download([id])
+        print(final_path)
+        if final_path is None:
+            raise Exception("Download failed, no final path found.")
+        with taglib.File(final_path, save_on_exit=True) as song:
+            song.tags["ARTIST"] = author
+            song.tags["TITLE"] = title
+            song.tags["FORMAT"] = format
+        shutil.copy2(final_path, f'/app/storage/{id}')
     except Exception as e:
         print(f"Error while downloading: {e}")
         return f"Error while downloading: {e}", 503
