@@ -23,7 +23,7 @@ if not db_url:
     raise ValueError("DATABASE_URL environment variable is not set")
 engine = create_engine(db_url)
 
-def login_required(f: function) -> function:
+def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get("Authorization", None)
