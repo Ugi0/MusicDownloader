@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from app.queries import *
 from functools import wraps
 import jwt
+import taglib
 from datetime import datetime, timezone, timedelta
 
 app = Blueprint("main", __name__)
@@ -109,7 +110,10 @@ def delete_file(id: str):
 @login_required
 def download_file(id: str):
     if os.path.exists(f'/app/storage/{id}'):
-        return send_file(f'/app/storage/{id}', as_attachment=True)
+        with taglib.File(f'/app/storage/{id}', save_on_exit=True) as song:
+            title = song.tags.get("TITLE", ["unknown"])[0]
+            format = song.tags.get("FORMAT", ["mp3"])[0]
+            return send_file(path_or_file= f'/app/storage/{id}', as_attachment=True, download_name=f'{title}.{format}', mimetype=f'audio/{format}')
     else:
         return "File does not exist", 404
 
@@ -118,15 +122,15 @@ def download_file(id: str):
 def start_post():
     data = request.get_json()
 
-    url = data.get("url")
+    id = data.get("id")
     title = data.get("title")
     author = data.get("author", "")
     format = data.get("format", "mp3")
 
-    if not url or not title:
+    if not id or not title:
         return "Missing parameters", 400
 
-    start_download_task.delay(url, title, author, format)
+    start_download_task.delay(id, title, author, format)
     return "Download started", 200
 
 def hash_password(plain_password: str) -> str:
