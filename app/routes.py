@@ -24,6 +24,15 @@ if not db_url:
     raise ValueError("DATABASE_URL environment variable is not set")
 engine = create_engine(db_url)
 
+def log_request(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        print(f'{request.method} request to {request.path}')
+        ret = f(*args, **kwargs)
+        print(f'Response: {ret}')
+        return ret
+    return decorated_function
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -43,15 +52,13 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.before_request
-def log_request():
-    current_app.logger.info(f'{request.method} request to {request.path}')
-
 @app.route('/', methods=["GET"])
+@log_request
 def root_get():
     return "Not allowed", 418
 
 @app.route('/login', methods=["POST"])
+@log_request
 def login():
     data = request.get_json()
     username = data['username']
@@ -71,6 +78,7 @@ def login():
         return "Invalid credentials", 401
 
 @app.route('/register', methods=["POST"])
+@log_request
 def register():
     data = request.get_json()
     userSecret = data.get('secret') if data else None
@@ -92,6 +100,7 @@ def register():
 
 @app.route('/status/<id>')
 @login_required
+@log_request
 def get_status(id: str):
     matches = [os.path.basename(path) for path in glob.glob(f'/app/storage/{id}.*')]
     if not matches:
@@ -100,6 +109,7 @@ def get_status(id: str):
     
 @app.route('/delete/<filename>')
 @login_required
+@log_request
 def delete_file(filename: str):
     if os.path.exists(f'/app/storage/{filename}'):
         os.remove(f'/app/storage/{filename}')
@@ -109,8 +119,10 @@ def delete_file(filename: str):
     
 @app.route('/download/<filename>')
 @login_required
+@log_request
 def download_file(filename: str):
     if os.path.exists(f'/app/storage/{filename}'):
+        print("file exists")
         with taglib.File(f'/app/storage/{filename}', save_on_exit=True) as song:
             title = song.tags.get("TITLE", ["unknown"])[0]
             format = song.tags.get("FORMAT", ["mp3"])[0]
@@ -122,6 +134,7 @@ def download_file(filename: str):
 
 @app.route('/start_download', methods=["POST"])
 @login_required
+@log_request
 def start_post():
     data = request.get_json()
 
