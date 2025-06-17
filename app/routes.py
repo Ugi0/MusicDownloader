@@ -113,7 +113,9 @@ def download_file(id: str):
         with taglib.File(f'/app/storage/{id}', save_on_exit=True) as song:
             title = song.tags.get("TITLE", ["unknown"])[0]
             format = song.tags.get("FORMAT", ["mp3"])[0]
-            return send_file(path_or_file= f'/app/storage/{id}', as_attachment=True, download_name=f'{title}.{format}', mimetype=f'audio/{format}')
+            response = make_response(send_file(path_or_file=f'/app/storage/{id}', as_attachment=True, mimetype=f'audio/{format}'))
+            response.headers["filename"] = f'{title}.{format}'
+            return response
     else:
         return "File does not exist", 404
 

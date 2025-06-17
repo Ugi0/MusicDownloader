@@ -38,6 +38,8 @@ services:
   worker:
     build: .
     command: celery -A app.tasks.celery worker --loglevel=info
+    volumes:
+      - /mnt/extssd:/app/storage
     depends_on:
       - redis
       - db
