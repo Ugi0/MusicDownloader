@@ -1,4 +1,4 @@
-from flask import Blueprint, request, send_file, current_app, jsonify
+from flask import Blueprint, make_response, request, send_file, current_app, jsonify
 from .tasks import start_download_task
 import hmac
 import os
@@ -8,6 +8,7 @@ from app.queries import *
 from functools import wraps
 import jwt
 import taglib
+import glob
 from datetime import datetime, timezone, timedelta
 
 app = Blueprint("main", __name__)
@@ -92,28 +93,28 @@ def register():
 @app.route('/status/<id>')
 @login_required
 def get_status(id: str):
-    if os.path.exists(f'/app/storage/{id}'):
-        return "File exists", 200
-    else:
+    matches = [os.path.basename(path) for path in glob.glob(f'/app/storage/{id}.*')]
+    if not matches:
         return "File does not exist", 404
+    return jsonify({"status": "exists", "files": matches}), 200
     
-@app.route('/delete/<id>')
+@app.route('/delete/<filename>')
 @login_required
-def delete_file(id: str):
-    if os.path.exists(f'/app/storage/{id}'):
-        os.remove(f'/app/storage/{id}')
+def delete_file(filename: str):
+    if os.path.exists(f'/app/storage/{filename}'):
+        os.remove(f'/app/storage/{filename}')
         return "File deleted", 200
     else:
         return "File does not exist", 404
     
-@app.route('/download/<id>')
+@app.route('/download/<filename>')
 @login_required
-def download_file(id: str):
-    if os.path.exists(f'/app/storage/{id}'):
-        with taglib.File(f'/app/storage/{id}', save_on_exit=True) as song:
+def download_file(filename: str):
+    if os.path.exists(f'/app/storage/{filename}'):
+        with taglib.File(f'/app/storage/{filename}', save_on_exit=True) as song:
             title = song.tags.get("TITLE", ["unknown"])[0]
             format = song.tags.get("FORMAT", ["mp3"])[0]
-            response = make_response(send_file(path_or_file=f'/app/storage/{id}', as_attachment=True, mimetype=f'audio/{format}'))
+            response = make_response(send_file(path_or_file=f'/app/storage/{filename}', as_attachment=True, download_name=f'{title}.{format}', mimetype=f'audio/{format}'))
             response.headers["filename"] = f'{title}.{format}'
             return response
     else:

@@ -31,7 +31,7 @@ def download_file(id: str, title: str, author: str, format: str):
             song.tags["ARTIST"] = author
             song.tags["TITLE"] = title
             song.tags["FORMAT"] = format
-        shutil.copy2(f'{final_path}.{format}', f'/app/storage/{id}')
+        shutil.copy2(f'{final_path}.{format}', f'/app/storage/{id}.{format}')
     except Exception as e:
         print(f"Error while downloading: {e}")
         return f"Error while downloading: {e}", 503
