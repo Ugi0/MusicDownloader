@@ -9,7 +9,11 @@ from functools import wraps
 import jwt
 import taglib
 import glob
+import logging
 from datetime import datetime, timezone, timedelta
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Blueprint("main", __name__)
 
@@ -27,9 +31,9 @@ engine = create_engine(db_url)
 def log_request(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print(f'{request.method} request to {request.path}')
+        logger.info(f'{request.method} request to {request.path}')
         ret = f(*args, **kwargs)
-        print(f'Response: {ret}')
+        logger.info(f'Response: {ret}')
         return ret
     return decorated_function
 
@@ -122,7 +126,7 @@ def delete_file(filename: str):
 @log_request
 def download_file(filename: str):
     if os.path.exists(f'/app/storage/{filename}'):
-        print("file exists")
+        logger.info("file exists")
         with taglib.File(f'/app/storage/{filename}', save_on_exit=True) as song:
             title = song.tags.get("TITLE", ["unknown"])[0]
             format = song.tags.get("FORMAT", ["mp3"])[0]
