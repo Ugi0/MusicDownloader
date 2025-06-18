@@ -125,12 +125,12 @@ def delete_file(filename: str):
 @login_required
 @log_request
 def download_file(filename: str):
-    if os.path.exists(f'/app/storage/{filename}'):
-        logger.info("file exists")
-        with taglib.File(f'/app/storage/{filename}', save_on_exit=True) as song:
+    path = f'/app/storage/{filename}'
+    if os.path.exists(path):
+        with taglib.File(path, save_on_exit=True) as song:
             title = song.tags.get("TITLE", ["unknown"])[0]
             format = song.tags.get("FORMAT", ["mp3"])[0]
-            response = make_response(send_file(path_or_file=f'/app/storage/{filename}', as_attachment=True, download_name=f'{title}.{format}', mimetype=f'audio/{format}'))
+            response = make_response(send_file(path_or_file=path, as_attachment=True, download_name=f'{title}.{format}', mimetype=f'audio/{format}'))
             response.headers["filename"] = f'{title}.{format}'
             return response
     else:

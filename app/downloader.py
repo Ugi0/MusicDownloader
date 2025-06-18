@@ -1,6 +1,7 @@
 import yt_dlp
 import shutil
 import taglib
+import os
 
 def download_file(id: str, title: str, author: str, format: str):
     final_path = None
@@ -31,7 +32,8 @@ def download_file(id: str, title: str, author: str, format: str):
             song.tags["ARTIST"] = author
             song.tags["TITLE"] = title
             song.tags["FORMAT"] = format
-        shutil.copy2(f'{final_path}.{format}', f'/app/storage/{id}.{format}')
+        shutil.copy2(f'{final_path}.{format}', f'/app/storage/{id}')
+        os.replace(f'/app/storage/{id}', f'/app/storage/{id}.{format}')
     except Exception as e:
         print(f"Error while downloading: {e}")
         return f"Error while downloading: {e}", 503
