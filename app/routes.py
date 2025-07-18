@@ -1,5 +1,6 @@
-from flask import Blueprint, make_response, request, send_file, current_app, jsonify
-from .tasks import start_download_task
+from flask import Blueprint, make_response, request, send_file, jsonify
+from app.settings import downloader_settings
+from app.tasks import start_download_task
 import hmac
 import os
 import bcrypt
@@ -7,17 +8,19 @@ from sqlalchemy import create_engine
 from app.queries import *
 from functools import wraps
 import jwt
-import taglib
+from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
 import glob
 import logging
 from datetime import datetime, timezone, timedelta
+from typing import Callable, TypeVar, Any, cast
+from tinytag import TinyTag
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Blueprint("main", __name__)
 
-JWT_SECRET = os.getenv("JWT_SECRET", os.getenv("SECRET_KEY"))
+JWT_SECRET = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY") or "default_jwt_secret"
 JWT_ALGORITHM = "HS256"
 JWT_TOKEN_DURATION = 3600
 
@@ -28,18 +31,20 @@ if not db_url:
     raise ValueError("DATABASE_URL environment variable is not set")
 engine = create_engine(db_url)
 
-def log_request(f):
+F = TypeVar('F', bound=Callable[..., Any])
+
+def log_request(f: F) -> F:
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args: object, **kwargs: object) -> object:
         logger.info(f'{request.method} request to {request.path}')
         ret = f(*args, **kwargs)
         logger.info(f'Response: {ret}')
         return ret
-    return decorated_function
+    return cast(F, decorated_function)
 
-def login_required(f):
+def login_required(f: F) -> F:
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args: object, **kwargs: object) -> object:
         auth_header = request.headers.get("Authorization", None)
         if not auth_header or not auth_header.startswith("Bearer "):
             return jsonify({"error": "Missing or invalid token"}), 401
@@ -47,14 +52,13 @@ def login_required(f):
         token = auth_header.split(" ")[1]
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            request.user = payload["sub"]
-        except jwt.ExpiredSignatureError:
+        except ExpiredSignatureError:
             return jsonify({"error": "Token has expired"}), 401
-        except jwt.InvalidTokenError:
+        except InvalidTokenError:
             return jsonify({"error": "Invalid token"}), 401
 
         return f(*args, **kwargs)
-    return decorated_function
+    return cast(F, decorated_function)
 
 @app.route('/', methods=["GET"])
 @log_request
@@ -77,6 +81,8 @@ def login():
             "exp": datetime.now(timezone.utc) + timedelta(seconds=JWT_TOKEN_DURATION)
         }
         token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        if isinstance(token, bytes):
+            token = token.decode('utf-8')
         return jsonify({"token": token}), 200
     else:
         return "Invalid credentials", 401
@@ -87,7 +93,7 @@ def register():
     data = request.get_json()
     userSecret = data.get('secret') if data else None
 
-    if not hmac.compare_digest(userSecret or "", secret):
+    if not hmac.compare_digest(str(userSecret or ""), str(secret or "")):
         return "Not allowed", 401
 
     username = data.get('username')
@@ -127,12 +133,10 @@ def delete_file(filename: str):
 def download_file(filename: str):
     path = f'/app/storage/{filename}'
     if os.path.exists(path):
-        with taglib.File(path, save_on_exit=True) as song:
-            title = song.tags.get("TITLE", ["unknown"])[0]
-            format = song.tags.get("FORMAT", ["mp3"])[0]
-            response = make_response(send_file(path_or_file=path, as_attachment=True, download_name=f'{title}.{format}', mimetype=f'audio/{format}'))
-            response.headers["filename"] = f'{title}.{format}'
-            return response
+        tag = TinyTag.get(path)
+        response = make_response(send_file(path_or_file=path, as_attachment=True, download_name=tag.filename, mimetype=f'audio/{format}'))
+        response.headers["filename"] = tag.filename or filename
+        return response
     else:
         return "File does not exist", 404
 
@@ -146,11 +150,15 @@ def start_post():
     title = data.get("title")
     author = data.get("author", "")
     format = data.get("format", "mp3")
+    trimFromStart = data.get("trimFromStart", 0)
+    trimFromEnd = data.get("trimFromEnd", 0)
+
+    settings = downloader_settings(id, title, author, format, trimFromStart, trimFromEnd)
 
     if not id or not title:
         return "Missing parameters", 400
 
-    start_download_task.delay(id, title, author, format)
+    start_download_task(settings)
     return "Download started", 200
 
 def hash_password(plain_password: str) -> str:
