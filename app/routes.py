@@ -152,6 +152,11 @@ def start_post():
     format = data.get("format", "mp3")
     trimFromStart = data.get("start", "")
     trimFromEnd = data.get("end", "")
+    delete_cache = data.get("no_cache", False)
+
+    if delete_cache:
+        if os.path.exists(f'/app/storage/{id}'):
+            os.remove(f'/app/storage/{id}')
 
     settings = downloader_settings(id, title, author, format, trimFromStart, trimFromEnd)
 
