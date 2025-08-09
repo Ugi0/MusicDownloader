@@ -150,15 +150,15 @@ def start_post():
     title = data.get("title")
     author = data.get("author", "")
     format = data.get("format", "mp3")
-    trimFromStart = data.get("trimFromStart", 0)
-    trimFromEnd = data.get("trimFromEnd", 0)
+    trimFromStart = data.get("start", "")
+    trimFromEnd = data.get("end", "")
 
     settings = downloader_settings(id, title, author, format, trimFromStart, trimFromEnd)
 
     if not id or not title:
         return "Missing parameters", 400
 
-    start_download_task(settings)
+    start_download_task.delay(settings.to_dict())
     return "Download started", 200
 
 def hash_password(plain_password: str) -> str:

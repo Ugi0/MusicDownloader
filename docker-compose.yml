@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:15
@@ -21,6 +19,7 @@ services:
       - "6379:6379"
 
   app:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: dockerfile
@@ -36,7 +35,10 @@ services:
       - db
 
   worker:
-    build: .
+    platform: linux/arm64
+    build: 
+      context: .
+      dockerfile: dockerfile
     command: celery -A app.tasks.celery worker --loglevel=info
     volumes:
       - /mnt/extssd:/app/storage

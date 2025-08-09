@@ -1,6 +1,5 @@
 FROM arm64v8/python:3.11-slim
 
-ENV PYTHONPATH "${PYTHONPATH}:/app"
 ENV PATH="$PATH:/home/appuser/.local/bin"
 ENV RUNTIME_DEPENDENCIES="ffmpeg"
 
