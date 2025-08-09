@@ -37,10 +37,10 @@ def download_file(settings: dict) -> None | tuple[str, int]:
             song = song[parse_time_to_seconds(settings["trimFromStart"]) * 1000:]
         elif settings["trimFromEnd"] != "":
             song = song[:-parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
-        file_handle = song.export(f'{final_path}.{settings["format"]}', format=settings["format"], tags={
+        song.export(f'{final_path}.{settings["format"]}', format=settings["format"], tags={
             'filename': f'{final_path}.{settings["format"]}'
         })
-        shutil.copy2(file_handle, f'/app/storage/{settings["id"]}')
+        shutil.copy2(f'{final_path}.{settings["format"]}', f'/app/storage/{settings["id"]}')
     except Exception as e:
         print(f"Error while downloading: {e}")
         return f"Error while downloading: {e}", 503
