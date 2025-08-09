@@ -32,11 +32,11 @@ def download_file(settings: dict) -> None | tuple[str, int]:
             raise Exception("Download failed, no final path found.")
         song = pydub.AudioSegment.from_file(f'{final_path}.{settings["format"]}')
         if settings["trimFromStart"] != "" and settings["trimFromEnd"] != "":
-            song = song[parse_time_to_seconds(settings["trimFromStart"]) * 1000: -parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
+            song = song[parse_time_to_seconds(settings["trimFromStart"]) * 1000: parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
         elif settings["trimFromStart"] != "":
             song = song[parse_time_to_seconds(settings["trimFromStart"]) * 1000:]
         elif settings["trimFromEnd"] != "":
-            song = song[:-parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
+            song = song[:parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
         song.export(f'{final_path}.{settings["format"]}', format=settings["format"], tags={
             'filename': f'{final_path}.{settings["format"]}'
         })
