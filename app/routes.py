@@ -112,7 +112,7 @@ def register():
 @login_required
 @log_request
 def get_status(id: str):
-    matches = [os.path.basename(path) for path in glob.glob(f'/app/storage/{id}.*')]
+    matches = [os.path.basename(path) for path in glob.glob(f'/app/storage/{id}')]
     if not matches:
         return "File does not exist", 404
     return jsonify({"status": "exists", "files": matches}), 200
