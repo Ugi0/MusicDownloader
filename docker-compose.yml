@@ -28,7 +28,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
     ports:
-      - 80:80
+      - "8000:8000"
     volumes:
       - /mnt/extssd:/app/storage
     depends_on:
@@ -36,7 +36,7 @@ services:
 
   worker:
     platform: linux/arm64
-    build: 
+    build:
       context: .
       dockerfile: dockerfile
     command: celery -A app.tasks.celery worker --loglevel=info

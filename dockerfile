@@ -22,8 +22,8 @@ COPY . .
 RUN chown -R appuser:appuser /app
 USER appuser
 
-EXPOSE 80
+EXPOSE 8000
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:80", "run:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "run:app"]
