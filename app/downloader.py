@@ -1,9 +1,6 @@
 import yt_dlp
 import shutil
 import pydub
-import os
-
-from app.settings import downloader_settings
 
 def download_file(settings: dict) -> None | tuple[str, int]:
     final_path = None
