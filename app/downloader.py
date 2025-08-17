@@ -35,6 +35,8 @@ def download_file(settings: dict) -> None | tuple[str, int]:
         elif settings["trimFromEnd"] != "":
             song = song[:parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
         song.export(f'{final_path}.{settings["format"]}', format=settings["format"], tags={
+            'artist': settings["author"],
+            'title': settings["title"],
             'filename': f'{final_path}.{settings["format"]}'
         })
         shutil.copy2(f'{final_path}.{settings["format"]}', f'/app/storage/{settings["id"]}')
