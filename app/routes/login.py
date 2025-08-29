@@ -2,15 +2,18 @@ from datetime import datetime, timezone, timedelta
 from flask import request, jsonify
 import jwt
 import os
-from routes import app, engine, log_request
+from app.common_route import engine, log_request
 import bcrypt
 from app.queries import get_hashed_password_query
+from flask import Blueprint
+
+login_bp = Blueprint("login", __name__)
 
 JWT_SECRET = os.getenv("JWT_SECRET") or os.getenv("SECRET_KEY") or "default_jwt_secret"
 JWT_ALGORITHM = "HS256"
 JWT_TOKEN_DURATION = 3600
 
-@app.route('/login', methods=["POST"])
+@login_bp.route('/login', methods=["POST"])
 @log_request
 def login():
     data = request.get_json()

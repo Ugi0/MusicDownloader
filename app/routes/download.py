@@ -1,9 +1,12 @@
 from tinytag import TinyTag
 from flask import make_response, send_file
 import os
-from app.routes import app, login_required, log_request
+from app.common_route import login_required, log_request
+from flask import Blueprint
 
-@app.route('/download/<filename>')
+download_bp = Blueprint("download", __name__)
+
+@download_bp.route('/download/<filename>', methods=["GET"])
 @login_required
 @log_request
 def download_file(filename: str):

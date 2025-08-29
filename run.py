@@ -1,3 +1,3 @@
-from app import create_app
+from app.celery import flask_app
 
-app = create_app()
+app = flask_app

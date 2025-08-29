@@ -27,26 +27,29 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     ports:
       - "8000:8000"
     volumes:
-      - /mnt/extssd:/app/storage
+      - /mnt/extssd/music:/app/storage
     depends_on:
       - db
+      - redis
 
   worker:
     platform: linux/arm64
     build:
       context: .
       dockerfile: dockerfile
-    command: celery -A app.tasks.celery worker --loglevel=info
+    command: celery -A app.celery.celery worker --loglevel=info
     volumes:
-      - /mnt/extssd:/app/storage
+      - /mnt/extssd/music:/app/storage
     depends_on:
       - redis
       - db
     environment:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
 
 volumes:
   postgres_data:

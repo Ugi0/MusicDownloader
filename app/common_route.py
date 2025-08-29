@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import request, jsonify
 import os
 from sqlalchemy import create_engine
 from functools import wraps
@@ -9,8 +9,6 @@ from typing import Callable, TypeVar, Any, cast
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-app = Blueprint("main", __name__)
 
 secret = os.getenv("SECRET_KEY")
 db_url = os.getenv("DATABASE_URL", "")

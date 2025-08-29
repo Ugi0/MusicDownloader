@@ -1,10 +1,13 @@
 import hmac
 from flask import request
-from app.routes import app, engine, log_request, secret
+from app.common_route import engine, log_request, secret
 import bcrypt
 from app.queries import insert_user_query
+from flask import Blueprint
 
-@app.route('/register', methods=["POST"])
+register_bp = Blueprint("register", __name__)
+
+@register_bp.route('/register', methods=["POST"])
 @log_request
 def register():
     data = request.get_json()

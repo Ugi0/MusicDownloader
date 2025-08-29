@@ -1,7 +1,10 @@
 import os
-from app.routes import app, login_required, log_request
+from app.common_route import login_required, log_request
+from flask import Blueprint
 
-@app.route('/delete/<filename>')
+delete_bp = Blueprint("delete", __name__)
+
+@delete_bp.route('/delete/<filename>', methods=["DELETE"])
 @login_required
 @log_request
 def delete_file(filename: str):

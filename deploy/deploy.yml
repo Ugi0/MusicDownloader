@@ -1,0 +1,56 @@
+- name: Deploy to server
+  hosts: webservers
+  tasks:
+    - name: Copy app folder to server
+      copy:
+        src: ../app
+        dest: /opt/MusicDownloader/
+        owner: ugi
+        group: ugi
+        mode: '0755'
+
+    - name: Copy docker-compose.yml to server
+      copy:
+        src: ../docker-compose.yml
+        dest: /opt/MusicDownloader/docker-compose.yml
+        owner: ugi
+        group: ugi
+        mode: '0644'
+
+    - name: Copy dockerfile to server
+      copy:
+        src: ../dockerfile
+        dest: /opt/MusicDownloader/dockerfile
+        owner: ugi
+        group: ugi
+        mode: '0644'
+
+    - name: Copy requirements.txt to server
+      copy:
+        src: ../requirements.txt
+        dest: /opt/MusicDownloader/requirements.txt
+        owner: ugi
+        group: ugi
+        mode: '0644'
+
+    - name: Copy init.sql to server
+      copy:
+        src: ../init.sql
+        dest: /opt/MusicDownloader/init.sql
+        owner: ugi
+        group: ugi
+        mode: '0644'
+
+    - name: Stop application
+      ansible.builtin.command:
+        cmd: docker-compose down
+        chdir: /opt/MusicDownloader/
+      become: yes
+      become_user: ugi
+
+    - name: Start application with docker-compose
+      ansible.builtin.command:
+        cmd: docker-compose up -d --build
+        chdir: /opt/MusicDownloader/
+      become: yes
+      become_user: ugi

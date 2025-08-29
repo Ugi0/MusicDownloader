@@ -8,7 +8,6 @@ RUN useradd -ms /bin/bash appuser
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-	libtag1-dev \
 	ffmpeg \
 	gcc \
 	python3-dev \

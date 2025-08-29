@@ -9,6 +9,7 @@ PyJWT
 gunicorn
 pydub
 tinytag
+mutagen
 python-dotenv
 cryptography
 yt_dlp
