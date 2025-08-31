@@ -1,5 +1,5 @@
 class downloader_settings:
-    def __init__(self, id, title, author, format='mp3', trimFromStart="", trimFromEnd=""):
+    def __init__(self, id, title, author, format='mp3', trimFromStart=-1, trimFromEnd=-1):
         self.id = id
         self.title = title
         self.author = author

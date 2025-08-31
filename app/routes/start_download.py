@@ -20,8 +20,8 @@ def start_post():
     title = data.get("title")
     author = data.get("author", "")
     format = data.get("format", "mp3")
-    trimFromStart = data.get("start", "")
-    trimFromEnd = data.get("end", "")
+    trimFromStart = data.get("start", -1)
+    trimFromEnd = data.get("end", -1)
     delete_cache = data.get("no_cache", False)
 
     if os.path.exists(f'/app/storage/{id}'):

@@ -66,14 +66,14 @@ def start_download_task(self, settings: dict) -> None | tuple[str, int]:
             )
             ydl.download([settings["id"]])
         final_file = f"{final_path}.{settings['format']}"
-        if settings["trimFromStart"] != "" or settings["trimFromEnd"] != "":
+        if settings["trimFromStart"] != -1 or settings["trimFromEnd"] != -1:
             song = pydub.AudioSegment.from_file(final_file)
-            if settings["trimFromStart"] != "" and settings["trimFromEnd"] != "":
-                song = song[parse_time_to_seconds(settings["trimFromStart"]) * 1000: parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
-            elif settings["trimFromStart"] != "":
-                song = song[parse_time_to_seconds(settings["trimFromStart"]) * 1000:]
-            elif settings["trimFromEnd"] != "":
-                song = song[:parse_time_to_seconds(settings["trimFromEnd"]) * 1000]
+            if settings["trimFromStart"] != -1 and settings["trimFromEnd"] != -1:
+                song = song[settings["trimFromStart"] * 1000: settings["trimFromEnd"] * 1000]
+            elif settings["trimFromStart"] != -1:
+                song = song[settings["trimFromStart"] * 1000:]
+            elif settings["trimFromEnd"] != -1:
+                song = song[:settings["trimFromEnd"] * 1000]
             song.export(final_file, format=settings["format"], tags={
                 'filename': final_file
             })
@@ -92,14 +92,3 @@ def start_download_task(self, settings: dict) -> None | tuple[str, int]:
         raise e
 
 start_download_task = cast(Task, start_download_task)
-
-def parse_time_to_seconds(time_str: str) -> int:
-    parts = list(map(int, time_str.split(':')))
-    if len(parts) == 2:
-        minutes, seconds = parts
-        return minutes * 60 + seconds
-    elif len(parts) == 3:
-        hours, minutes, seconds = parts
-        return hours * 3600 + minutes * 60 + seconds
-    else:
-        raise ValueError("Invalid time format")
