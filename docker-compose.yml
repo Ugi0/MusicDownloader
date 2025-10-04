@@ -43,6 +43,7 @@ services:
       dockerfile: dockerfile
     command: celery -A app.celery.celery worker --loglevel=info
     volumes:
+      - ./cookiefile:/app/cookiefile
       - /mnt/extssd/music:/app/storage
     depends_on:
       - redis

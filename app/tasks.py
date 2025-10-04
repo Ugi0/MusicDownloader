@@ -44,7 +44,7 @@ def start_download_task(self, settings: dict) -> None | tuple[str, int]:
             'outtmpl' : f'/tmp/{settings["id"]}',
             'extract_audio' : True,
             'format': 'bestaudio/best',
-            'cookiefile': 'cookiefile',
+            'cookiefile': '/app/cookiefile',
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': settings["format"],
@@ -53,7 +53,7 @@ def start_download_task(self, settings: dict) -> None | tuple[str, int]:
         }
     #Download song
     try:
-        with yt_dlp.YoutubeDL(yt_opts) as ydl:
+        with yt_dlp.YoutubeDL(yt_opts) as ydl: # type: ignore
             info = ydl.extract_info(settings["id"], download=False)
             duration = 0
             if (info is not None) and ("duration" in info):
